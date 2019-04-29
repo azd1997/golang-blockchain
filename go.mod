@@ -1,3 +1,3 @@
-module github.com/tensor-programming/golang-blockchain
+module github.com/azd1997/golang-blockchain
 
 go 1.12
