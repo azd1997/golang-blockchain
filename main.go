@@ -3,9 +3,8 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"fmt"
 
-	_"fmt"
-	_"rsc.io/quote"
 )
 
 type Blockchain struct {
@@ -30,8 +29,32 @@ func CreateBlock(data string, prevHash []byte) *Block {
 	return block
 }
 
+func (chain *Blockchain) AddBlock(data string) {
+	prevBlock := chain.blocks[ len(chain.blocks) - 1 ]
+	newBlock := CreateBlock(data, prevBlock.Hash)
+	chain.blocks = append(chain.blocks, newBlock)
+}
 
+func Genesis() *Block {
+	return CreateBlock("Genesis", []byte{})
+}
+
+func InitBlockChain() *Blockchain {
+	return &Blockchain{[]*Block{ Genesis() }}
+}
 
 func main() {
+
+	chain := InitBlockChain()
+
+	chain.AddBlock("第二个区块")
+	chain.AddBlock("第三个区块")
+	chain.AddBlock("第四个区块")
+
+	for _, block := range chain.blocks {
+		fmt.Printf("PrevHash: %x\n", block.PrevHash)
+		fmt.Printf("Data in Block: %s\n", block.Data)
+		fmt.Printf("Hash: %x\n", block.Hash)
+	}
 
 }
