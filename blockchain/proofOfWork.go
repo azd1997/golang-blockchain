@@ -3,7 +3,6 @@ package blockchain
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/binary"
 	"fmt"
 	"math"
 	"math/big"
@@ -28,7 +27,7 @@ type ProofOfWork struct {
 /*创建新的工作量证明对象*/
 func NewProof(b *Block) *ProofOfWork {
 	target := big.NewInt(1)                  //Target初始化为大数 1
-	target.Lsh(target, uint(256-Difficulty)) //Taget左移(256-Difficulty)位，得到需要的Target
+	target.Lsh(target, uint(256-Difficulty)) //Target左移(256-Difficulty)位，得到需要的Target
 
 	pow := &ProofOfWork{b, target}
 
@@ -40,7 +39,7 @@ func (pow *ProofOfWork) InitData(nonce int) []byte {
 	data := bytes.Join(
 		[][]byte{
 			pow.Block.PrevHash,
-			pow.Block.Data, //注意此时没有Hash，需要后边计算再赋进来
+			pow.Block.HashTransactions(), //注意此时没有Hash，需要后边计算再赋进来
 			ToHex(int64(nonce)),
 			ToHex(int64(Difficulty)),
 		},
@@ -88,10 +87,4 @@ func (pow *ProofOfWork) Validate() bool {
 	return intHash.Cmp(pow.Target) == -1
 }
 
-/*整型数据转换成十六进制的字节数组，用以让Nonce、Difficulty参与区块哈希计算*/
-func ToHex(num int64) []byte {
-	buff := new(bytes.Buffer)
-	err := binary.Write(buff, binary.BigEndian, num)
-	Handle(err)
-	return buff.Bytes()
-}
+

@@ -2,6 +2,14 @@
   <dictionary name="37419">
     <words>
       <w>blockchain</w>
+      <w>coinbase</w>
+      <w>createblockchain</w>
+      <w>getbalance</w>
+      <w>printchain</w>
+      <w>txin</w>
+      <w>txout</w>
+      <w>vinputs</w>
+      <w>voutputs</w>
     </words>
   </dictionary>
 </component>
