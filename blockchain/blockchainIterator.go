@@ -1,6 +1,9 @@
 package blockchain
 
-import "github.com/dgraph-io/badger"
+import (
+	"github.com/azd1997/golang-blockchain/utils"
+	"github.com/dgraph-io/badger"
+)
 
 type BCIterator struct {
 	CurrentHash []byte
@@ -14,13 +17,13 @@ func (iter *BCIterator) Next() *Block {
 	//从数据库取出当前区块的序列化字节，反序列化
 	err := iter.Db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(iter.CurrentHash)
-		Handle(err)
+		utils.Handle(err)
 		encodedBlock, err := item.Value()
 		block = Deserialize(encodedBlock)
 
 		return err
 	})
-	Handle(err)
+	utils.Handle(err)
 
 	//更新BCIterator对象
 	iter.CurrentHash = block.PrevHash

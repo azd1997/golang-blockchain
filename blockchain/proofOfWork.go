@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
+	"github.com/azd1997/golang-blockchain/utils"
 	"math"
 	"math/big"
 )
@@ -40,8 +41,8 @@ func (pow *ProofOfWork) InitData(nonce int) []byte {
 		[][]byte{
 			pow.Block.PrevHash,
 			pow.Block.HashTransactions(), //注意此时没有Hash，需要后边计算再赋进来
-			ToHex(int64(nonce)),
-			ToHex(int64(Difficulty)),
+			utils.ToHex(int64(nonce)),
+			utils.ToHex(int64(Difficulty)),
 		},
 		[]byte{})
 	return data

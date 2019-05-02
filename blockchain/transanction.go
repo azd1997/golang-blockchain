@@ -6,6 +6,7 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"fmt"
+	"github.com/azd1997/golang-blockchain/utils"
 	"log"
 )
 
@@ -22,7 +23,7 @@ func (tx *Transaction) SetID() {
 
 	encode := gob.NewEncoder(&encoded)
 	err := encode.Encode(tx)
-	Handle(err)
+	utils.Handle(err)
 
 	hash = sha256.Sum256(encoded.Bytes())
 	tx.ID = hash[:]
@@ -74,7 +75,7 @@ func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction
 
 	for txid, outs := range validOutputs { //txid为键，outs为值
 		txID, err := hex.DecodeString(txid) //由字符串解码回十六进制字节数组
-		Handle(err)
+		utils.Handle(err)
 
 		for _, out := range outs {
 			input := TxInput{txID, out, from}

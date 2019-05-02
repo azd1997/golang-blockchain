@@ -3,6 +3,7 @@ package blockchain
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/azd1997/golang-blockchain/utils"
 	"github.com/dgraph-io/badger"
 	"runtime"
 )
@@ -31,7 +32,7 @@ func InitBlockChain(address string) *BlockChain {
 	opts.ValueDir = dbPath
 
 	db, err := badger.Open(opts)
-	Handle(err)
+	utils.Handle(err)
 
 	//更新数据库，存入创世区块和lasthash
 	err = db.Update(func(txn *badger.Txn) error {
@@ -43,7 +44,7 @@ func InitBlockChain(address string) *BlockChain {
 		fmt.Println("Genesis created...")
 		//存入区块链的第一个区块的键值对
 		err = txn.Set(genesis.Hash, genesis.Serialize())
-		Handle(err)
+		utils.Handle(err)
 		//安排一个键值对用来存储链上最新区块的哈希，在工程代码里常称为lasthash、lh
 		err = txn.Set([]byte("lh"), genesis.Hash)
 
@@ -52,7 +53,7 @@ func InitBlockChain(address string) *BlockChain {
 		return err
 
 	})
-	Handle(err)
+	utils.Handle(err)
 
 	//创建BlockChain对象并返回
 	blockchain := BlockChain{lastHash, db}
@@ -75,16 +76,16 @@ func ContinueBlockChain(address string) *BlockChain {
 	opts.ValueDir = dbPath
 
 	db, err := badger.Open(opts)
-	Handle(err)
+	utils.Handle(err)
 
 	//查取("lh", lastHash)
 	err = db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte("lh"))
-		Handle(err)
+		utils.Handle(err)
 		lastHash, err = item.Value()
 		return err
 	})
-	Handle(err)
+	utils.Handle(err)
 
 	//创建并返回BlockChain对象
 	chain := BlockChain{lastHash, db}
@@ -98,11 +99,11 @@ func (chain *BlockChain) AddBlock(transactions []*Transaction) {
 	//获取lastHash
 	err := chain.Db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte("lh"))
-		Handle(err)
+		utils.Handle(err)
 		lastHash, err = item.Value()
 		return err
 	})
-	Handle(err)
+	utils.Handle(err)
 
 	//将Transactions和PrevHash(lastHash)，打包、工作量证明，挖出新区块
 	newBlock := CreateBlock(transactions, lastHash)
@@ -110,14 +111,14 @@ func (chain *BlockChain) AddBlock(transactions []*Transaction) {
 	//将新区块信息存入数据库；更新数据库中lastHash；更新BlockChain对象中lastHash
 	err = chain.Db.Update(func(txn *badger.Txn) error {
 		err := txn.Set(newBlock.Hash, newBlock.Serialize())
-		Handle(err)
+		utils.Handle(err)
 		err = txn.Set([]byte("lh"), newBlock.Hash)
 
 		chain.LastHash = newBlock.Hash
 
 		return err
 	})
-	Handle(err)
+	utils.Handle(err)
 }
 
 /*返回区块链迭代器对象*/
