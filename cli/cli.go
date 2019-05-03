@@ -112,3 +112,25 @@ func (cli *CommandLine) Run() {
 	}
 
 }
+
+//调试流程
+//0.删除数据库
+//钱包文件中已有两个钱包：19mTU5jXmfTuE2uUx3XhRU7jZ2HoeofcCW	18v5TVC3LHsnEUC7VzvqKFVuZb4kTW1R6N
+//1.先创建一个钱包
+//main createwallet
+//2.将第一个地址作为创世区块奖励地址,创建区块链
+//main createblockchain -address "address1"
+//3.打印地址1余额
+//main getbalance -address "address1"
+//4.打印区块链
+//main printchain
+//5.再创建一个钱包
+//main createwallet
+//6.产生两个地址之间的交易
+//main send -from "address1" -to "address2" -amount 45
+//7.打印地址2余额
+//main getbalance -address "address2"
+//8.打印区块链
+//main printchain
+//9.打印地址列表
+//main listaddresses

@@ -33,6 +33,7 @@ type BlockChain struct {
 
 //TODO:参数
 /*创建带有创世区块的区块链，创世区块需指定创世区块coinbase收款人地址*/
+//创世区块奖励接收者建议为	1111 1111 1111 1111 1111 1111 1111 1111 11
 func InitBlockChain(address string) *BlockChain {
 	var lastHash []byte
 

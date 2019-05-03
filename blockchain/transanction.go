@@ -114,7 +114,9 @@ func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction
 	}
 
 	tx := Transaction{nil, inputs, outputs}
-	tx.SetID()
+	tx.ID = tx.Hash()
+	//对交易进行签名
+	chain.SignTransaction(&tx, w.WPrivateKey)
 
 	return &tx
 }

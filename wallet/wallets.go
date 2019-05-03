@@ -28,6 +28,7 @@ type Wallets struct {
 
 
 /*将wallets字典维护的内容编码之后写进文本*/
+//注意每次保存都是使用新的wallets钱包集对象取刷新原先的文本内容
 func (ws *Wallets) SaveFile() {
 	var content bytes.Buffer
 
