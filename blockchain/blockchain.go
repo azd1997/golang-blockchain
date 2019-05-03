@@ -30,6 +30,7 @@ type BlockChain struct {
 //8.func (bc *BlockChain) FindTransaction(ID []byte) (Transaction, error)
 //9.func (bc *BlockChain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey)
 //10.func (bc *BlockChain) VerifyTransaction(tx *Transaction) bool
+//11.func (bc *BlockChain) FindUTXO2() map[string]TXOutputs
 
 //TODO:参数
 /*创建带有创世区块的区块链，创世区块需指定创世区块coinbase收款人地址*/
@@ -111,7 +112,7 @@ func ContinueBlockChain(address string) *BlockChain {
 }
 
 /*向区块链中添加新区块*/
-func (bc *BlockChain) AddBlock(transactions []*Transaction) {
+func (bc *BlockChain) AddBlock(transactions []*Transaction) *Block {
 	var lastHash []byte
 	//获取lastHash
 	err := bc.Db.View(func(txn *badger.Txn) error {
@@ -136,6 +137,8 @@ func (bc *BlockChain) AddBlock(transactions []*Transaction) {
 		return err
 	})
 	utils.Handle(err)
+
+	return newBlock
 }
 
 /*返回区块链迭代器对象*/
@@ -143,6 +146,51 @@ func (bc *BlockChain) Iterator() *BCIterator {
 	iter := &BCIterator{bc.LastHash, bc.Db}
 
 	return iter
+}
+
+func (bc *BlockChain) FindUTXO2() map[string]TXOutputs {
+
+	UTXO := make(map[string]TXOutputs)
+	spentTXOs := make(map[string][]int)
+
+	iter := bc.Iterator()
+
+	for {
+		block := iter.Next()
+
+		for _, tx := range block.Transactions {
+			txID := hex.EncodeToString(tx.ID)
+
+		Outputs:
+			for outIdx, out := range tx.TXOutputs {
+				if spentTXOs[txID] != nil {
+					for _, spentOut := range spentTXOs[txID] {
+						if spentOut == outIdx {
+							continue Outputs
+						}
+					}
+				}
+
+				outs := UTXO[txID]
+				outs.TXOutputs = append(outs.TXOutputs, out)
+				UTXO[txID] = outs
+			}
+
+			if tx.IsCoinbase() == false {
+				for _, in := range tx.TXInputs {
+					inTxID := hex.EncodeToString(in.ID)
+					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Out)
+				}
+			}
+		}
+
+		if len(block.PrevHash) == 0 {
+			break
+		}
+
+	}
+	return UTXO
+
 }
 
 /*寻找某账户未花费的交易*/

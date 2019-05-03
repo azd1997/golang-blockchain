@@ -16,13 +16,14 @@ func (cli *CommandLine) getBalance(address string) {
 	}
 
 	chain := blockchain.ContinueBlockChain(address)
+	UTXOSet := blockchain.UTXOSet{chain}
 	defer chain.Db.Close()
 
 	balance := 0
 	pubKeyHash := utils.Base58Decode([]byte(address))
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-4]
 
-	UTXOs := chain.FindUTXO(pubKeyHash)
+	UTXOs := UTXOSet.FindUnspentTransactions(pubKeyHash)
 
 	for _, out := range UTXOs {
 		balance += out.Value

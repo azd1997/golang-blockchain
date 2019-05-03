@@ -74,7 +74,7 @@ func CoinbaseTx(to, data string) *Transaction {
 }
 
 /*产生一笔新交易*/
-func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction {
+func NewTransaction(from, to string, amount int, UTXO *UTXOSet) *Transaction {
 	var inputs []TXInput   //当前交易的输入
 	var outputs []TXOutput //当前交易输出
 
@@ -88,7 +88,7 @@ func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction
 	//1.找到A的所有UTXO，计算A的余额，检查A余额是否足够
 	//2.检查A余额
 
-	acc, validOutputs := chain.FindSpendableOutputs(pubKeyHash, amount)
+	acc, validOutputs := UTXO.FindSpendableOutputs(pubKeyHash, amount)
 	//注意返回的acc是有可能小于amount的！！！
 
 	//余额不够，报错
@@ -110,13 +110,13 @@ func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction
 
 	//增加找零的交易输出
 	if acc > amount {
-		outputs = append(outputs, TXOutput{acc - amount, pubKeyHash})
+		outputs = append(outputs, *NewTXOutput(acc-amount, from))
 	}
 
 	tx := Transaction{nil, inputs, outputs}
 	tx.ID = tx.Hash()
 	//对交易进行签名
-	chain.SignTransaction(&tx, w.WPrivateKey)
+	UTXO.UBlockChain.SignTransaction(&tx, w.WPrivateKey)
 
 	return &tx
 }
