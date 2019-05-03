@@ -25,6 +25,14 @@ type ProofOfWork struct {
 	Target *big.Int
 }
 
+//方法列表
+//1.func NewProof(b *Block) *ProofOfWork
+//2.func (pow *ProofOfWork) InitData(nonce int) []byte
+//3.func (pow *ProofOfWork) Run() (int, []byte)
+//4.func (pow *ProofOfWork) Validate() bool
+
+
+
 /*创建新的工作量证明对象*/
 func NewProof(b *Block) *ProofOfWork {
 	target := big.NewInt(1)                  //Target初始化为大数 1

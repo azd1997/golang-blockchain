@@ -9,11 +9,18 @@ import (
 
 type Block struct {
 	Hash     []byte
-	//Data     []byte
 	Transactions []*Transaction
 	PrevHash []byte
 	Nonce    int
 }
+
+//方法列表
+//1.func (b *Block) HashTransactions() []byte
+//2.func CreateBlock(txs []*Transaction, prevHash []byte) *Block
+//3.func Genesis(coinbase *Transaction) *Block
+//4.func (b *Block) Serialize() []byte
+//5.func Deserialize(data []byte) *Block
+
 
 /*对区块中要打包的交易取哈希，并以哈希表示所有交易*/
 func (b *Block) HashTransactions() []byte {

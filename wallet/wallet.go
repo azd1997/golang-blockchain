@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"bytes"
 	//"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
@@ -22,6 +23,15 @@ type Wallet struct {
 	WPrivateKey ecdsa.PrivateKey
 	WPublicKey  []byte
 }
+
+//方法列表
+//1.func NewKeyPair() (ecdsa.PrivateKey, []byte)
+//2.func MakeWallet() *Wallet
+//3.func PublicKeyHash(pubKey []byte)
+//4.func Checksum(payload []byte) []byte
+//5.func (w Wallet) Address() []byte
+//6.func ValidateAddress(address string) bool
+
 
 /*生成ECDSA公私钥对*/
 //TODO：弄清ECDSA代码实现
@@ -92,8 +102,33 @@ func (w Wallet) Address() []byte {
 	return address
 }
 
+/*账户（钱包创建流程）*/
 //1.privateKey -> ecdsa -> publicKey -> sha256 -> ripemd160 -> publicKeyHash
 //2.publicKeyHash -> sha256 -> sha256 -> 4bytes -> checksum -> 3.
 //publicKeyHash -> 3.
 //version -> 3.
 //3.checksum;publicKeyHash;version} -> base58 -> address
+
+/*数字签名实现*/
+//Address
+//FullHash
+//[Version]
+//[Pub Key Hash]
+//[CheckSum]
+
+/*验证钱包地址是否是合法的钱包地址*/
+func ValidateAddress(address string) bool {
+	//由字符串钱包地址解码得到所谓的公钥哈希（加入了校验码和版本号的）
+	pubKeyHash := utils.Base58Decode([]byte(address))
+	//取出检验码
+	actualChecksum := pubKeyHash[len(pubKeyHash)-checksumLength:]
+	//取出版本号
+	version := pubKeyHash[0]
+	//取出实际上的公钥哈希（sha256+ripemd160）
+	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-checksumLength-1]
+	//将得到的实际公钥哈希在本地进行一次计算校验码
+	targetChecksum := Checksum(append([]byte{version}, pubKeyHash...))
+
+	//返回两个校验码是否相等，相等说明钱包地址有效
+	return bytes.Compare(actualChecksum, targetChecksum) == 0
+}

@@ -22,6 +22,9 @@ func (cli *CommandLine) printChain() {
 
 		pow := blockchain.NewProof(block)
 		fmt.Printf("POW: %s\n", strconv.FormatBool(pow.Validate()))
+		for _, tx := range block.Transactions {
+			fmt.Println(tx)
+		}
 		fmt.Println()
 
 		if len(block.PrevHash) == 0 { //创世区块PrevHash设为0

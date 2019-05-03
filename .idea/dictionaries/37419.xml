@@ -7,6 +7,7 @@
       <w>getbalance</w>
       <w>hasher</w>
       <w>printchain</w>
+      <w>priv</w>
       <w>ripemd</w>
       <w>txid</w>
       <w>txin</w>
