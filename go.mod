@@ -8,15 +8,19 @@ require (
 	github.com/mr-tron/base58 v1.1.2
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/stretchr/testify v1.3.0 // indirect
-	golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac
-	golang.org/x/net v0.0.0-20180821023952-922f4815f713 // indirect
+	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+	golang.org/x/net v0.0.0-20190311183353-d8887717615a // indirect
+	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a
+	golang.org/x/text v0.3.2
+	golang.org/x/tools v0.0.0-20190328211700-ab21143f2384
 )
 
 replace (
-	golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac => github.com/golang/crypto v0.0.0-20180820150726-614d502a4dac
-	golang.org/x/net v0.0.0-20180821023952-922f4815f713 => github.com/golang/net v0.0.0-20180826012351-8a410e7b638d
-	golang.org/x/sys v0.0.0-20190429190828-d89cdac9e872 => github/golang/sys v0.0.0-20190429190828-d89cdac9e872
-	golang.org/x/text v0.3.0 => github.com/golang/text v0.3.0
+	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2 => github.com/golang/crypto v0.0.0-20190308221718-c2843e01d9a2
+	golang.org/x/net v0.0.0-20190311183353-d8887717615a => github.com/golang/net v0.0.0-20190311183353-d8887717615a
+	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a => github.com/golang/sys v0.0.0-20190215142949-d0b11bdaac8a
+	golang.org/x/tools v0.0.0-20190328211700-ab21143f2384 => github.com/golang/tools v0.0.0-20190328211700-ab21143f2384
+	golang.org/x/text v0.3.2 => github.com/golang/text v0.3.2
 )
 
 go 1.12
