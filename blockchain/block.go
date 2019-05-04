@@ -2,7 +2,6 @@ package blockchain
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/gob"
 	"github.com/azd1997/golang-blockchain/utils"
 )
@@ -25,15 +24,14 @@ type Block struct {
 /*对区块中要打包的交易取哈希，并以哈希表示所有交易*/
 func (b *Block) HashTransactions() []byte {
 	var txHashes [][]byte //单笔交易的哈希的集合（二维字节数组）
-	var txHash [32]byte   //所有交易哈西再计算的哈希
 
 	for _, tx := range b.Transactions {
-		txHashes = append(txHashes, tx.ID)
+		txHashes = append(txHashes, tx.Serialize())
 	}
-	txHashesBytes := bytes.Join(txHashes, []byte{})
-	txHash = sha256.Sum256(txHashesBytes)
+	//注意，引入Merkle后这里的txHashes其实不表示哈西了，而表示序列化交易集合
+	tree := NewMerkleTree(txHashes)
 
-	return txHash[:]
+	return tree.RootNode.Data
 }
 
 /*创建区块*/

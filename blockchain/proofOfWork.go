@@ -69,7 +69,7 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 		data := pow.InitData(nonce)
 		hash = sha256.Sum256(data) //sha256哈希计算
 
-		fmt.Printf("\r%x", hash)
+		fmt.Printf("\r哈希值为：%x", hash)
 		intHash.SetBytes(hash[:]) //哈希值字节数组转为大数型，用以比较
 
 		if intHash.Cmp(pow.Target) == -1 { // intHash < Target

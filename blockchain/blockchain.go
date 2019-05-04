@@ -373,6 +373,12 @@ func (bc *BlockChain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey)
 
 /*验证一笔交易，通过验证这笔交易的所有来源交易来实现*/
 func (bc *BlockChain) VerifyTransaction(tx *Transaction) bool {
+
+	//检查是不是Coinbase交易，是则返回true
+	if tx.IsCoinbase() {
+		return true
+	}
+
 	//获取所有来源交易
 	prevTXs := make(map[string]Transaction)
 

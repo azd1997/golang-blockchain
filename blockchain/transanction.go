@@ -35,17 +35,17 @@ type Transaction struct {
 //10.func (tx Transaction) String() string
 
 /*对交易进行哈希，设置其交易ID*/
-func (tx *Transaction) SetID() {
-	var encoded bytes.Buffer
-	var hash [32]byte
-
-	encode := gob.NewEncoder(&encoded)
-	err := encode.Encode(tx)
-	utils.Handle(err)
-
-	hash = sha256.Sum256(encoded.Bytes())
-	tx.ID = hash[:]
-}
+//func (tx *Transaction) SetID() {
+//	var encoded bytes.Buffer
+//	var hash [32]byte
+//
+//	encode := gob.NewEncoder(&encoded)
+//	err := encode.Encode(tx)
+//	utils.Handle(err)
+//
+//	hash = sha256.Sum256(encoded.Bytes())
+//	tx.ID = hash[:]
+//}
 
 /*判断交易是否是Coinbase交易*/
 func (tx *Transaction) IsCoinbase() bool {
@@ -59,7 +59,12 @@ func CoinbaseTx(to, data string) *Transaction {
 	//若Coinbase交易未指定Data内容，则默认为下方内容
 	//对于挖出区块的矿工而言，可以在Coinbase交易的data域填想填的东西
 	if data == "" {
-		data = fmt.Sprintf("Coins to %s", to)
+		//长度为24字节的随机数据
+		randData := make([]byte, 24)
+		_, err := rand.Read(randData)
+		utils.Handle(err)
+
+		data = fmt.Sprintf("%x", randData)
 	}
 
 	//Coinbase来源交易不存在，所以填空字节，其来源交易占来源输出序号也不存在，这里以-1表示
@@ -68,7 +73,8 @@ func CoinbaseTx(to, data string) *Transaction {
 
 	//Coinbase交易只有一笔输入一笔输出，其交易ID或者说哈希需要进行哈希才能得到
 	tx := Transaction{nil, []TXInput{txin}, []TXOutput{*txout}}
-	tx.SetID()
+	//tx.SetID()
+	tx.ID = tx.Hash()
 
 	return &tx
 }
