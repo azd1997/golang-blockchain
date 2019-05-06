@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"encoding/gob"
 	"github.com/azd1997/golang-blockchain/utils"
+	"time"
 )
 
 type Block struct {
-	Hash     []byte
+	Timestamp    int64
+	Height       int
+	Hash         []byte
 	Transactions []*Transaction
-	PrevHash []byte
-	Nonce    int
+	PrevHash     []byte
+	Nonce        int
 }
 
 //方法列表
@@ -35,8 +38,8 @@ func (b *Block) HashTransactions() []byte {
 }
 
 /*创建区块*/
-func CreateBlock(txs []*Transaction, prevHash []byte) *Block {
-	block := &Block{[]byte{}, txs, prevHash, 0}
+func CreateBlock(txs []*Transaction, prevHash []byte, height int) *Block {
+	block := &Block{time.Now().Unix(), height, []byte{}, txs, prevHash, 0}
 
 	pow := NewProof(block)
 	nonce, hash := pow.Run()
@@ -49,7 +52,7 @@ func CreateBlock(txs []*Transaction, prevHash []byte) *Block {
 
 /*创建创世区块（只含有一个Coinbase交易，因为这时候只有这个账户得到钱，其他人没钱，也就不可能有其他交易）*/
 func Genesis(coinbase *Transaction) *Block {
-	return CreateBlock([]*Transaction{coinbase}, []byte{})
+	return CreateBlock([]*Transaction{coinbase}, []byte{}, 0)
 }
 
 /*对区块进行序列化，返回字节数组*/

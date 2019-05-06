@@ -7,8 +7,8 @@ import (
 )
 
 /*命令行打印区块信息*/
-func (cli *CommandLine) printChain() {
-	chain := blockchain.ContinueBlockChain("")
+func (cli *CommandLine) printChain(nodeID string) {
+	chain := blockchain.ContinueBlockChain(nodeID)
 	defer chain.Db.Close()
 
 	iter := chain.Iterator()

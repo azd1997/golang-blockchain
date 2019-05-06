@@ -8,7 +8,11 @@ import (
 	"fmt"
 	"github.com/azd1997/golang-blockchain/utils"
 	"github.com/dgraph-io/badger"
+	"log"
+	"os"
+	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 const genesisData = "First Transaction from Genesis"
@@ -35,21 +39,22 @@ type BlockChain struct {
 //TODO:参数
 /*创建带有创世区块的区块链，创世区块需指定创世区块coinbase收款人地址*/
 //创世区块奖励接收者建议为	1111 1111 1111 1111 1111 1111 1111 1111 11
-func InitBlockChain(address string) *BlockChain {
+func InitBlockChain(address, nodeId string) *BlockChain {
 	var lastHash []byte
 
 	//检查区块链是否存在，不存在才执行下边的初始化区块链流程
-	if DbExists() {
+	path := fmt.Sprintf(dbPath, nodeId)
+	if DbExists(path) {
 		fmt.Println("区块链已存在...")
 		runtime.Goexit()
 	}
 
 	//打开数据库
 	opts := badger.DefaultOptions
-	opts.Dir = dbPath
-	opts.ValueDir = dbPath
+	opts.Dir = path
+	opts.ValueDir = path
 
-	db, err := badger.Open(opts)
+	db, err := openDB(path, opts)
 	utils.Handle(err)
 
 	//更新数据库，存入创世区块和lastHash
@@ -80,8 +85,11 @@ func InitBlockChain(address string) *BlockChain {
 
 /*区块链已存在时，调用此函数，创建并返回此时最新的区块链对象*/
 //TODO:ContinueBlockChain调用了不必要的参数
-func ContinueBlockChain(address string) *BlockChain {
-	if DbExists() == false {
+func ContinueBlockChain(nodeId string) *BlockChain {
+
+	//检查数据库是否存在
+	path := fmt.Sprintf(dbPath, nodeId)
+	if DbExists(path) == false {
 		fmt.Println("No existing blockchain found, create one!")
 		runtime.Goexit()
 	}
@@ -90,10 +98,10 @@ func ContinueBlockChain(address string) *BlockChain {
 
 	//配置并打开数据库
 	opts := badger.DefaultOptions
-	opts.Dir = dbPath
-	opts.ValueDir = dbPath
+	opts.Dir = path
+	opts.ValueDir = path
 
-	db, err := badger.Open(opts)
+	db, err := openDB(path, opts)
 	utils.Handle(err)
 
 	//查取("lh", lastHash)
@@ -111,20 +119,36 @@ func ContinueBlockChain(address string) *BlockChain {
 	return &blockChain
 }
 
-/*向区块链中添加新区块*/
-func (bc *BlockChain) AddBlock(transactions []*Transaction) *Block {
+/*向区块链中 挖出 新区块*/
+func (bc *BlockChain) MineBlock(transactions []*Transaction) *Block {
+
+	//本地验证交易有效性
+	for _, tx := range transactions {
+		if bc.VerifyTransaction(tx) != true {
+			log.Panic("Invalid Transaction")
+		}
+	}
+
 	var lastHash []byte
-	//获取lastHash
+	var lastHeight int
 	err := bc.Db.View(func(txn *badger.Txn) error {
+		//获取lastHash
 		item, err := txn.Get([]byte("lh"))
 		utils.Handle(err)
 		lastHash, err = item.Value()
+		//获取lastHeight
+		item, err = txn.Get([]byte(lastHash))
+		utils.Handle(err)
+		lastBlockData, _ := item.Value()
+		lastBlock := Deserialize(lastBlockData)
+		lastHeight = lastBlock.Height
+
 		return err
 	})
 	utils.Handle(err)
 
 	//将Transactions和PrevHash(lastHash)，打包、工作量证明，挖出新区块
-	newBlock := CreateBlock(transactions, lastHash)
+	newBlock := CreateBlock(transactions, lastHash, lastHeight+1)
 
 	//将新区块信息存入数据库；更新数据库中lastHash；更新BlockChain对象中lastHash
 	err = bc.Db.Update(func(txn *badger.Txn) error {
@@ -139,6 +163,102 @@ func (bc *BlockChain) AddBlock(transactions []*Transaction) *Block {
 	utils.Handle(err)
 
 	return newBlock
+}
+
+/*向区块链中 添加 新区块*/
+//这个主要是用于当从别的节点接收最新区块时，将这些区块加入到本地区块链
+func (bc *BlockChain) AddBlock(block *Block) {
+	err := bc.Db.Update(func(txn *badger.Txn) error {
+		if _, err := txn.Get(block.Hash); err == nil {
+			return nil
+		}
+
+		//将区块存入
+		blockData := block.Serialize()
+		err := txn.Set(block.Hash, blockData)
+		utils.Handle(err)
+
+		//取出最后区块
+		item, err := txn.Get([]byte("lh"))
+		utils.Handle(err)
+		lastHash, _ := item.Value()
+		item, err = txn.Get(lastHash)
+		utils.Handle(err)
+		lastBlockData, _ := item.Value()
+		lastBlock := Deserialize(lastBlockData)
+
+		//比较最后区块和刚加入的区块的区块高度
+		if block.Height > lastBlock.Height {
+			err := txn.Set([]byte("lh"), block.Hash)
+			utils.Handle(err)
+			bc.LastHash = block.Hash
+		}
+
+		return nil
+	})
+	utils.Handle(err)
+}
+
+/*从区块链中查询区块*/
+func (bc *BlockChain) GetBlock(blockHash []byte) (Block, error) {
+	var block Block
+
+	err := bc.Db.View(func(txn *badger.Txn) error {
+		if item, err := txn.Get(blockHash); err != nil {
+			return errors.New("block is not found")
+		} else {
+			blockData, _ := item.Value()
+			block = *Deserialize(blockData)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return block, err
+	}
+
+	return block, nil
+}
+
+/*获取区块链所有区块哈希集合，用以快速验证不同节点间区块链的一致性*/
+func (bc *BlockChain) GetBlockHashes() [][]byte {
+	var blockHashes [][]byte
+
+	iter := bc.Iterator()
+
+	for {
+		block := iter.Next()
+
+		blockHashes = append(blockHashes, block.Hash)
+
+		if len(block.PrevHash) == 0 {
+			break
+		}
+	}
+
+	return blockHashes
+}
+
+func (bc *BlockChain) GetBestHeight() int {
+	var lastBlock Block
+
+	err := bc.Db.View(func(txn *badger.Txn) error {
+
+		item, err := txn.Get([]byte("lh"))
+		utils.Handle(err)
+		lastHash, _ := item.Value()
+
+		item, err = txn.Get(lastHash)
+		utils.Handle(err)
+		lastBlockData, _ := item.Value()
+
+		lastBlock = *Deserialize(lastBlockData)
+
+		return nil
+	})
+	utils.Handle(err)
+
+	return lastBlock.Height
 }
 
 /*返回区块链迭代器对象*/
@@ -390,4 +510,35 @@ func (bc *BlockChain) VerifyTransaction(tx *Transaction) bool {
 
 	//验证所有来源交易
 	return tx.Verify(prevTXs)
+}
+
+/*开启数据库失败时调用*/
+func retry(dir string, originOpts badger.Options) (*badger.DB, error) {
+
+	lockPath := filepath.Join(dir, "LOCK")
+	if err := os.Remove(lockPath); err != nil {
+		return nil, fmt.Errorf(`removing "LOCK": %s`, err)
+	}
+	retryOpts := originOpts
+	retryOpts.Truncate = true //truncate 截短
+	db, err := badger.Open(retryOpts)
+
+	return db, err
+}
+
+/*打开数据库，一次不成则retry*/
+func openDB(dir string, opts badger.Options) (*badger.DB, error) {
+	if db, err := badger.Open(opts); err != nil {
+		//报错信息包含“LOCK”，则retry
+		if strings.Contains(err.Error(), "LOCK") {
+			if db, err := retry(dir, opts); err == nil {
+				log.Println("database unlocked, value log truncated")
+				return db, nil
+			}
+			log.Println("could not unlock database:", err)
+		}
+		return nil, err
+	} else {
+		return db, nil
+	}
 }

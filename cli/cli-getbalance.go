@@ -9,13 +9,14 @@ import (
 )
 
 /*获取账户余额*/
-func (cli *CommandLine) getBalance(address string) {
+func (cli *CommandLine) getBalance(address, nodeID string) {
 
 	if !wallet.ValidateAddress(address) {
 		log.Panic("Address is not valid")
 	}
 
-	chain := blockchain.ContinueBlockChain(address)
+	chain := blockchain.ContinueBlockChain(nodeID)
+
 	UTXOSet := blockchain.UTXOSet{chain}
 	defer chain.Db.Close()
 

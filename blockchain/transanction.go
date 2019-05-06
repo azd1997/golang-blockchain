@@ -23,7 +23,7 @@ type Transaction struct {
 }
 
 //方法列表
-//1.func (tx *Transaction) SetID()
+//1.func DeserializeTransaction(data []byte) Transaction
 //2.func (tx *Transaction) IsCoinbase() bool
 //3.func CoinbaseTx(to, data string) *Transaction
 //4.func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction
@@ -34,18 +34,16 @@ type Transaction struct {
 //9.func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool
 //10.func (tx Transaction) String() string
 
-/*对交易进行哈希，设置其交易ID*/
-//func (tx *Transaction) SetID() {
-//	var encoded bytes.Buffer
-//	var hash [32]byte
-//
-//	encode := gob.NewEncoder(&encoded)
-//	err := encode.Encode(tx)
-//	utils.Handle(err)
-//
-//	hash = sha256.Sum256(encoded.Bytes())
-//	tx.ID = hash[:]
-//}
+func DeserializeTransaction(data []byte) Transaction {
+
+	var transaction Transaction
+
+	decoder := gob.NewDecoder(bytes.NewReader(data))
+	err := decoder.Decode(&transaction)
+	utils.Handle(err)
+
+	return transaction
+}
 
 /*判断交易是否是Coinbase交易*/
 func (tx *Transaction) IsCoinbase() bool {
@@ -80,13 +78,11 @@ func CoinbaseTx(to, data string) *Transaction {
 }
 
 /*产生一笔新交易*/
-func NewTransaction(from, to string, amount int, UTXO *UTXOSet) *Transaction {
+func NewTransaction(w *wallet.Wallet, to string, amount int, UTXO *UTXOSet) *Transaction {
 	var inputs []TXInput   //当前交易的输入
 	var outputs []TXOutput //当前交易输出
 
-	wallets, err := wallet.CreateWallets()
-	utils.Handle(err)
-	w := wallets.GetWallet(from)
+
 	pubKeyHash := wallet.PublicKeyHash(w.WPublicKey)
 
 	//用户进行转账时，需指定转账者A，被转账者B以及转账金额S
@@ -112,6 +108,7 @@ func NewTransaction(from, to string, amount int, UTXO *UTXOSet) *Transaction {
 		}
 	}
 
+	from := fmt.Sprintf("%s", w.Address())
 	outputs = append(outputs, *NewTXOutput(amount, to))
 
 	//增加找零的交易输出

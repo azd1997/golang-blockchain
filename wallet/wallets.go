@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-const walletFile = "./tmp/wallets/wallets.data"
+const walletFile = "./tmp/wallets/wallets_%s.data" //根据不同nodeId生成不同的wallets.data
 
 //注意wallets是要一直维护的，所以所有调用其的操作需要改变其内容时，一定要用指针
 type Wallets struct {
@@ -29,8 +29,9 @@ type Wallets struct {
 
 /*将wallets字典维护的内容编码之后写进文本*/
 //注意每次保存都是使用新的wallets钱包集对象取刷新原先的文本内容
-func (ws *Wallets) SaveFile() {
+func (ws *Wallets) SaveFile(nodeId string) {
 	var content bytes.Buffer
+	walletFile := fmt.Sprintf(walletFile, nodeId)
 
 	gob.Register(elliptic.P256())
 
@@ -44,7 +45,9 @@ func (ws *Wallets) SaveFile() {
 
 //TODo:检查Wallets还是WalletsMap
 /*从文本文件加载钱包文件，解码后还原出钱包字典*/
-func (ws *Wallets) LoadFile() error {
+func (ws *Wallets) LoadFile(nodeId string) error {
+
+	walletFile := fmt.Sprintf(walletFile, nodeId)
 	if _, err := os.Stat(walletFile); os.IsNotExist(err) {
 		return err
 	}
@@ -65,11 +68,11 @@ func (ws *Wallets) LoadFile() error {
 }
 
 /*创造钱包字典对象，从钱包文件中读内容，赋给钱包字典*/
-func CreateWallets() (*Wallets, error) {
+func CreateWallets(nodeId string) (*Wallets, error) {
 	wallets := Wallets{}
 	wallets.WalletsMap = make(map[string]*Wallet)
 
-	err := wallets.LoadFile()
+	err := wallets.LoadFile(nodeId)
 
 	return &wallets, err
 }
