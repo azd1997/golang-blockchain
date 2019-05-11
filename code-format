@@ -1,0 +1,19 @@
+- 所有变量命名采用驼峰法
+- 内部可见变量开头小写字母
+- 外部可见变量开头大写字母
+- 结构类型名称遵循外部可见变量规则
+- 当结构类型名需要作为其他结构属性名时，
+    引起歧义的情况下 属性名加调用的结构类型首字母前缀
+
+- Block/block/b   区块
+- BlockChain/blockChain/bc  区块链
+- BCIterator/bcIterator/bci/iter    区块链迭代器
+- ProofOfWork/proofOfWork/pow   工作量证明
+- Transaction/transaction/tx    交易
+- TxOutput/txOutput/txout   交易输出
+- TxInput/txInput/txin  交易输入
+- Wallet/wallet/w   钱包
+- Wallets/wallets/ws    钱包字典
+
+
+

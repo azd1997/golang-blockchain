@@ -1,0 +1,60 @@
+数据结构：
+
+`type Block struct {
+	Hash     []byte
+	//Data     []byte
+	Transactions []*Transaction
+	PrevHash []byte
+	Nonce    int
+}`
+
+`type BlockChain struct {
+ 	//Blocks []*Block
+ 	LastHash []byte
+ 	Db       *badger.DB
+}`
+ 
+`type ProofOfWork struct {
+  	Block  *Block
+  	Target *big.Int
+}`
+  
+  
+`type BCIterator struct {
+	CurrentHash []byte
+	Db          *badger.DB
+}`
+  
+  
+`type Transaction struct {
+ 	ID        []byte //即交易哈西
+ 	TXInputs  []TxInput
+ 	TXOutputs []TxOutput
+ }`
+ 
+`type TxInput struct {
+ 	ID  []byte //来源交易的ID
+ 	Out int    //来源转账在来源交易中是第几个输出
+ 	//Sig string //转账发起者的签名
+ 	Signature []byte
+ 	PubKey	[]byte 	//公钥
+ }`
+ 
+`type TxOutput struct {
+ 	Value  int    //转账金额
+ 	//PubKey string //转账对象地址
+ 	PubKeyHash []byte	//公钥哈希
+ }`
+ 
+`type CommandLine struct {
+  	//blockchain *blockchain.BlockChain
+}`
+
+`type Wallet struct {
+ 	WPrivateKey ecdsa.PrivateKey
+ 	WPublicKey  []byte
+ }`
+ 
+`type Wallets struct {
+	Wallets map[string]*Wallet
+}`
