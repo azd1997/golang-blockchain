@@ -87,7 +87,6 @@ func StartServer(nodeID, minerAddress string) {
 	defer ln.Close()
 
 	//打开数据库获取区块链对象，关闭数据库
-	//TODO:ContinueB...函数暂时不需要address参数
 	chain := blockchain.ContinueBlockChain(nodeID)
 	defer chain.Db.Close()
 	go CloseDB(chain)
